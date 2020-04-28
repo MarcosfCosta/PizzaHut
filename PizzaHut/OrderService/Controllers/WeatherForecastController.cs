@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace OrderService.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/v1/[controller]")]
+    [Produces("application/json")]
     public class WeatherForecastController : ControllerBase
     {
         private static readonly string[] Summaries = new[]
@@ -23,7 +25,13 @@ namespace OrderService.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Get Forecast random
+        /// </summary>
+        /// <returns>Foecast</returns>
+        /// <response code="200">Returns the generated forcast</response>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public IEnumerable<WeatherForecast> Get()
         {
             var rng = new Random();
