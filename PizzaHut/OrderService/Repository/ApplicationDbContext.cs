@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using OrderService.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +14,7 @@ namespace OrderService.Repository
         {
         }
 
-        //public DbSet<Indicador> Indicadores { get; set; }
+        public DbSet<Order> Order { get; set; }
         //public DbSet<BolsaValores> BolsasValores { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

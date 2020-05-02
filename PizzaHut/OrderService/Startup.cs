@@ -16,6 +16,8 @@ using System.Linq;
 using System.Net.Mime;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
+using HealthChecks.System;
+using HealthChecks.UI.Configuration;
 
 namespace OrderService
 {
@@ -23,6 +25,9 @@ namespace OrderService
     {
         private const string ApiVersion = "v1";
         private const string ApiName = "OrderAPI";
+        private const string HealthURL = "/health";
+        private const string SQLConnectionName = "SQLConnection";
+        private const string MySqlConnection = "MySqlConnection";
 
         public Startup(IConfiguration configuration)
         {
@@ -53,7 +58,7 @@ namespace OrderService
             // - Microsoft.EntityFrameworkCore.SqlServer
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
-                    Configuration.GetConnectionString("SQLConnection")));
+                    Configuration.GetConnectionString(MySqlConnection)));
 
             // Redis cache
             //services.AddDistributedRedisCache(options =>
@@ -64,8 +69,13 @@ namespace OrderService
             //});
 
             services.AddHealthChecks()
-                .AddSqlServer(Configuration.GetConnectionString("SQLConnection"), name: "SQL Connection");
-                //.AddRedis(Configuration.GetConnectionString("CacheRedis"), name: "cacheRedis");
+                .AddMySql(Configuration.GetConnectionString(MySqlConnection), name: MySqlConnection)
+                //.AddSqlServer(Configuration.GetConnectionString(SQLConnectionName), name: SQLConnectionName)
+                .AddDiskStorageHealthCheck(delegate (DiskStorageOptions diskStorageOptions)
+                {
+                    diskStorageOptions.AddDrive(@"C:\", 100);
+                }, name: "My Drive", HealthStatus.Unhealthy);
+            //.AddRedis(Configuration.GetConnectionString("CacheRedis"), name: "cacheRedis");
             services.AddHealthChecksUI();
 
         }
@@ -91,7 +101,7 @@ namespace OrderService
             // specifying the Swagger JSON endpoint.
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", ApiName);
+                c.SwaggerEndpoint("/swagger/" + ApiVersion + "/swagger.json", ApiName);
                 //c.RoutePrefix = string.Empty;
             });
 
@@ -129,8 +139,10 @@ namespace OrderService
                 ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
             });
 
-            // Ativa o dashboard para a visualização da situação de cada Health Check
-            app.UseHealthChecksUI();
+            app.UseHealthChecksUI(delegate (Options options)
+            {
+                options.UIPath = HealthURL;
+            });
         }
     }
 }
